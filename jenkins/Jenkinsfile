@@ -2,9 +2,9 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_CREDENTIALS = credentials('dockerhubcreds') // Jenkins credentials ID for Docker Hub
+        DOCKER_CREDENTIALS = credentials('dockerhubcreds') 
         DOCKER_REGISTRY = 'gald10102'
-        REPO_NAME = 'flask-aws-monitor' // Change this as needed
+        REPO_NAME = 'flask-aws-monitor'
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         DOCKER_IMAGE = "$DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG"
     }
@@ -15,8 +15,8 @@ pipeline {
                 git branch: 'feature/pythonapp', url: 'https://github.com/gald10102/FinalExam.git'
             }
         }
-        
-        stage('Lint & Security Scan') {
+        //mocking the tests
+        stage('Lint and Security Scan') {
             parallel {
                 stage('Flake8 Linting') {
                     steps {

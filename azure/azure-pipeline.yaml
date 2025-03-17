@@ -70,6 +70,8 @@ stages:
     displayName: 'Ensure Credentials are Secure'
     steps:
       - script: |
-          echo 'TODO: Configure Azure DevOps secrets for Docker Hub login'
-          echo 'Use Azure DevOps secure variable groups for storing credentials securely'
+          echo "Using Docker Hub credentials securely."
+          
+          # Docker login using secrets from the Gal-secrets variable group
+          echo $(DOCKERHUB_PASSWORD) | docker login -u $(DOCKERHUB_USERNAME) --password-stdin
         displayName: 'Secure Credential Storage'

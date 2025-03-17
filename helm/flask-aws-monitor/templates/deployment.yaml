@@ -38,11 +38,27 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: accessKeyId
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: secretAccessKey
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: aws-config
+                  key: region
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: 5001
               protocol: TCP
           {{- with .Values.livenessProbe }}
           livenessProbe:

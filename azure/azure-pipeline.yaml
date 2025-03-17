@@ -43,7 +43,11 @@ stages:
   jobs:
   - job: BuildImage
     steps:
-      - script: echo "build docker"
+      - script: |
+          echo "Building Docker image from Dockerfile..."
+          
+          # Build Docker image
+          docker build -t $(IMAGE_NAME) .
         displayName: 'Build Docker Image'
 
 - stage: PushToDockerHub

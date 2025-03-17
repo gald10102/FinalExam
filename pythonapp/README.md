@@ -1,5 +1,5 @@
 Pyhton Flask App feature!
-
+I used a .env file with the creds in it. 
 building the image:
 
 ![image](https://github.com/user-attachments/assets/26379674-c729-43e6-ac6b-b2d32bb0b7c6)

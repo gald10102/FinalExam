@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        DOCKERHUB_CREDS = credentials('dockerhubcreds')
+        DOCKER_CREDENTIALS = credentials('dockerhubcreds')
         DOCKER_REGISTRY = 'gald10102'
         REPO_NAME = 'flask-aws-monitor'  // Change this as needed
         IMAGE_TAG = "${env.BUILD_NUMBER}"
@@ -66,33 +66,14 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                script {
-            // Extract Docker Hub username and password from Jenkins credentials
-            def dockerHubUsername = DOCKERHUB_CREDS.username
-            def dockerHubPassword = DOCKERHUB_CREDS.password
-
-            // Debugging: Print Docker Hub username
-            echo "Logging into Docker Hub as: $dockerHubUsername"
-            
-            // Log in to Docker Hub
-            sh """
-                echo $dockerHubPassword | docker login -u $dockerHubUsername --password-stdin
-            """
-            
-            // Check Docker info to confirm login
-            sh 'docker info'
-
-            // List Docker images to verify image is available locally
-            sh 'docker images'
-
-            // Push the Docker image to Docker Hub
-            sh """
-                docker push $IMAGE_NAME:$IMAGE_TAG
-                docker push $IMAGE_NAME:latest
-            """
-        }
+                        sh """
+                        docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWOR
+                        docker push ${DOCKER_IMAGE}
+                        """
+                    }
+                }
             }
         }
-    }
     
     post {
         success {

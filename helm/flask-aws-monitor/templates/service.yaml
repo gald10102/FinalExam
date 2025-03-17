@@ -5,11 +5,13 @@ metadata:
   labels:
     {{- include "flask-aws-monitor.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.service.type | default "ClusterIP" }}
   ports:
-    - port: {{ .Values.service.port }}
+    - port: 5001
       targetPort: http
       protocol: TCP
       name: http
   selector:
     {{- include "flask-aws-monitor.selectorLabels" . | nindent 4 }}
+
+

@@ -1,3 +1,5 @@
+I used the AWS credentials outside of the yaml in .env file thats not included!
+
 proof kubernetes running:
 
 ![image](https://github.com/user-attachments/assets/c8211f49-6cb6-4d8c-b1db-42dfc70ffe4d)

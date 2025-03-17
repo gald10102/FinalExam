@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-repo.git'
+                git branch: 'feature/pythonapp', url: 'https://github.com/gald10102/FinalExam.git'
             }
         }
         
@@ -18,6 +18,9 @@ pipeline {
                 stage('Linting') {
                     steps {
                         script {
+                            sh """
+                                ls
+                            """
                             // Linting for Python (Flake8)
                             sh 'flake8 . || true'  
                             

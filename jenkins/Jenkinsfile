@@ -52,6 +52,7 @@ pipeline {
                 script {
                     // Build the Docker image
                     sh """
+                        cd pythonapp/
                         ls -l
                     """
                     sh 'docker build -t $IMAGE_NAME .'

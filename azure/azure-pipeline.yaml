@@ -70,8 +70,9 @@ stages:
     displayName: 'Build Docker Image'
     steps:
       - script: |
-          git branch
-          cd ..
+          echo "Current directory:"
+          pwd
+          echo "Files in directory:"
           ls -l
           echo "Building Docker Image..."
           docker build -t $(IMAGE_NAME):latest .

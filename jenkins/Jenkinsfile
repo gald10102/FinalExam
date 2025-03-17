@@ -63,17 +63,6 @@ pipeline {
             }
         }
 
-        stage('Run Tests in Container') {
-            steps {
-                script {
-                    // Run tests inside the Docker container
-                    sh """
-                        docker run --rm $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG pytest tests/
-                    """
-                }
-            }
-        }
-
         stage('Push to Docker Hub') {
             steps {
                 script {

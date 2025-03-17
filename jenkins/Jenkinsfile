@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        DOCKERHUB_CREDS= credentials('dockerhubcreds')
+        DOCKERHUB_CREDS = credentials('dockerhubcreds')
         IMAGE_NAME = 'gald10102/flask-aws-monitor'
     }
     
@@ -18,9 +18,6 @@ pipeline {
                 stage('Linting') {
                     steps {
                         script {
-                            sh """
-                                ls
-                            """
                             // Linting for Python (Flake8)
                             sh 'flake8 . || true'  
                             
@@ -37,7 +34,7 @@ pipeline {
                     steps {
                         script {
                             // Security scan for Docker (Trivy)
-                            sh 'trivy image --exit-code 1 --no-progress $IMAGE_NAME  || true'
+                            sh 'trivy image --exit-code 1 --no-progress $IMAGE_NAME || true'
                             
                             // Security scan for Python (Bandit)
                             sh 'bandit -r . || true'
@@ -55,18 +52,17 @@ pipeline {
                         cd pythonapp/
                         ls -l
                         docker build -t $IMAGE_NAME .
-                        
                     """
                 }
             }
         }
         
-       stage('Push to Docker Hub') {
+        stage('Push to Docker Hub') {
             steps {
                 script {
                     // Extract Docker Hub username and password from Jenkins credentials
-                    def dockerHubUsername = credentials('dockerhubcreds').username
-                    def dockerHubPassword = credentials('dockerhubcreds').password
+                    def dockerHubUsername = DOCKERHUB_CREDS.username
+                    def dockerHubPassword = DOCKERHUB_CREDS.password
             
                     // Debugging: Print Docker Hub username
                     echo "Logging into Docker Hub as: $dockerHubUsername"
@@ -78,9 +74,9 @@ pipeline {
             
                     // Push the Docker image to Docker Hub
                     sh 'docker push $IMAGE_NAME'
+                }
+            }
         }
-    }
-}
     }
     
     post {
@@ -88,7 +84,4 @@ pipeline {
             echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed! Check logs for details.'
-        }
-    }
-}
+  

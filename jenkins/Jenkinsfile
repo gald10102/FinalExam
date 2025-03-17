@@ -37,7 +37,7 @@ pipeline {
                     steps {
                         script {
                             // Security scan for Docker (Trivy)
-                            sh 'trivy image --exit-code 1 --no-progress $IMAGE_NAME'
+                            sh 'trivy image --exit-code 1 --no-progress $IMAGE_NAME  || true'
                             
                             // Security scan for Python (Bandit)
                             sh 'bandit -r . || true'

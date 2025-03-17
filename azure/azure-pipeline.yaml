@@ -9,6 +9,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
+- group: Gal-secrets 
   DOCKERHUB_USERNAME: $(DOCKERHUB_USERNAME)
   DOCKERHUB_PASSWORD: $(DOCKERHUB_PASSWORD)
   IMAGE_NAME: 'gald10102/flask-aws-monitor'

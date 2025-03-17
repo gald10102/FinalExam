@@ -3,7 +3,9 @@ pipeline {
     
     environment {
         DOCKERHUB_CREDS = credentials('dockerhubcreds')
-        IMAGE_NAME = 'gald10102/flask-aws-monitor'
+        DOCKER_REGISTRY = 'gald10102'
+        REPO_NAME = 'flask-aws-monitor'  // Change this as needed
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
     }
     
     stages {
@@ -13,32 +15,36 @@ pipeline {
             }
         }
         
-        stage('Parallel Checks') {
+        stage('Lint & Security Scan') {
             parallel {
-                stage('Linting') {
+                stage('Flake8 Linting') {
                     steps {
-                        script {
-                            // Linting for Python (Flake8)
-                            sh 'flake8 . || true'  
-                            
-                            // Linting for Shell (ShellCheck)
-                            sh 'shellcheck *.sh || true'
-                            
-                            // Linting for Dockerfile (Hadolint)
-                            sh 'hadolint Dockerfile || true'
-                        }
+                        sh """
+                            pip install flake8
+                            cd pythonapp
+                            flake8 . || true
+                        """
                     }
                 }
-                
-                stage('Security Scan') {
+                stage('Bandit Security Scan') {
                     steps {
-                        script {
-                            // Security scan for Docker (Trivy)
-                            sh 'trivy image --exit-code 1 --no-progress $IMAGE_NAME || true'
-                            
-                            // Security scan for Python (Bandit)
-                            sh 'bandit -r . || true'
-                        }
+                        sh """
+                            pip install bandit
+                            cd pythonapp
+                            bandit -r . || true
+                        """
+                    }
+                }
+                stage('Dockerfile Linting (Hadolint)') {
+                    steps {
+                        sh 'hadolint Dockerfile || true'
+                    }
+                }
+                stage('Trivy Security Scan') {
+                    steps {
+                        sh """
+                            trivy image --exit-code 1 --no-progress $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG || true
+                        """
                     }
                 }
             }
@@ -49,31 +55,45 @@ pipeline {
                 script {
                     // Build the Docker image
                     sh """
-                        cd pythonapp/
-                        ls -l
-                        docker build -t $IMAGE_NAME .
+                        cd pythonapp
+                        docker build -t $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG .
+                        docker tag $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$REPO_NAME:latest
                     """
                 }
             }
         }
-        
+
+        stage('Run Tests in Container') {
+            steps {
+                script {
+                    // Run tests inside the Docker container
+                    sh """
+                        docker run --rm $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG pytest tests/
+                    """
+                }
+            }
+        }
+
         stage('Push to Docker Hub') {
             steps {
                 script {
                     // Extract Docker Hub username and password from Jenkins credentials
                     def dockerHubUsername = DOCKERHUB_CREDS.username
                     def dockerHubPassword = DOCKERHUB_CREDS.password
-            
+
                     // Debugging: Print Docker Hub username
                     echo "Logging into Docker Hub as: $dockerHubUsername"
-            
+                    
                     // Log in to Docker Hub
                     sh """
                         echo $dockerHubPassword | docker login -u $dockerHubUsername --password-stdin
                     """
-            
+                    
                     // Push the Docker image to Docker Hub
-                    sh 'docker push $IMAGE_NAME'
+                    sh """
+                        docker push $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG
+                        docker push $DOCKER_REGISTRY/$REPO_NAME:latest
+                    """
                 }
             }
         }

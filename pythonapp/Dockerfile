@@ -1,36 +1,27 @@
-# Stage 1: Build Environment
+# Stage 1: Builder
 FROM python:3.11-slim AS builder
 
-# Set the working directory
 WORKDIR /app
 
-# Install dependencies (for compiling certain packages)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy and install dependencies
+# Copy the requirements file
 COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Final Image
 FROM python:3.11-slim
 
-# Set the working directory
 WORKDIR /app
 
-# Copy only the necessary files from builder stage
-COPY --from=builder /install /usr/local
+# Copy installed dependencies from the builder stage
+COPY --from=builder /usr/local /usr/local
 
-# Copy the application code
+# Copy application files
 COPY . .
 
-# Expose the application port
+# Expose port 5001 for the Flask app
 EXPOSE 5001
 
-# Set environment variables for AWS Secret Key
-ENV AWS_SECRET_KEY=your_secret_key_here
-
-# Run the Python application
+# Command to run the app (Flask)
 CMD ["python", "app.py"]

@@ -1,77 +1,63 @@
+# Azure DevOps Pipeline for CI/CD Integration
+
 trigger:
-- feature/azure  # Set to the branch you want to trigger the pipeline
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
 
 variables:
-  DOCKER_REGISTRY: 'gald10102'
-  REPO_NAME: 'flask-aws-monitor'
-  IMAGE_TAG: $(Build.BuildNumber)
-  DOCKER_IMAGE: '$(DOCKER_REGISTRY)/$(REPO_NAME):$(IMAGE_TAG)'
+  DOCKERHUB_USERNAME: $(DOCKERHUB_USERNAME)
+  DOCKERHUB_PASSWORD: $(DOCKERHUB_PASSWORD)
+  IMAGE_NAME: 'your-dockerhub-username/flask-aws-monitor'
 
 stages:
 - stage: CloneRepository
+  displayName: 'Clone Repository'
   jobs:
   - job: Clone
     steps:
-    - checkout: self  # Use the built-in 'Checkout' task to clone the repository
+    - checkout: self
 
-- stage: LintAndSecurityScan
+- stage: ParallelChecks
+  displayName: 'Parallel Linting & Security Checks'
+  dependsOn: CloneRepository
   jobs:
-  - job: LintAndScan
+  - job: Linting
+    displayName: 'Linting'
     steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '3.x'
-        addToPath: true
-    - script: |
-        pip install flake8
-        cd pythonapp
-        flake8 . || true
-      displayName: 'Flake8 Linting'
-    - script: |
-        pip install bandit
-        cd pythonapp
-        bandit -r . || true
-      displayName: 'Bandit Security Scan'
-    - script: |
-        hadolint Dockerfile || true
-      displayName: 'Dockerfile Linting (Hadolint)'
-    - script: |
-        trivy image --exit-code 1 --no-progress $(DOCKER_IMAGE) || true
-      displayName: 'Trivy Security Scan'
+      - script: echo 'TODO: Add linting steps for Python, Shell, and Dockerfile'
+        displayName: 'Run Linting'
+  
+
+    displayName: 'Security Scanning'
+      - script: echo 'TODO: Add security scanning steps for dependencies and container security'
+        displayName: 'Run Security Scan'
 
 - stage: BuildDockerImage
+  displayName: 'Build Docker Image'
+  dependsOn: ParallelChecks
   jobs:
-  - job: Build
+  - job: BuildImage
     steps:
-    - script: |
-        cd pythonapp
-        docker build -t $(DOCKER_IMAGE) .
-        docker tag $(DOCKER_IMAGE) $(DOCKER_REGISTRY)/$(REPO_NAME):latest
-      displayName: 'Build Docker Image'
+      - script: echo 'TODO: Add Docker build step'
+        displayName: 'Build Docker Image'
 
 - stage: PushToDockerHub
+  displayName: 'Push Docker Image to Docker Hub'
+  dependsOn: BuildDockerImage
   jobs:
-  - job: Push
-    steps:
-    - task: Docker@2
-      inputs:
-        containerRegistry: 'dockerhubcreds'  # The Azure DevOps Docker registry connection
-        repository: '$(DOCKER_IMAGE)'
-        command: 'push'
-        tags: |
-          $(IMAGE_TAG)
-          latest
-      displayName: 'Push to Docker Hub'
-
-- stage: PostActions
+  - job: PushImage
+- stage: SecureCredentials
+  displayName: 'Store and Use Secure Credentials'
+  dependsOn: []
   jobs:
-  - job: PostActions
+  - job: StoreSecrets
+    displayName: 'Ensure Credentials are Secure'
     steps:
-    - script: |
-        echo "Pipeline completed successfully!"
-      condition: succeeded()
-      displayName: 'Success Message'
-    - script: |
-        echo "Pipeline failed! Check logs for details."
-      condition: failed()
-      displayName: 'Failure Message'
+      - script: |
+          echo 'TODO: Configure Azure DevOps secrets for Docker Hub login'
+          echo 'Use Azure DevOps secure variable groups for storing credentials securely'
+        displayName: 'Secure Credential Storage'

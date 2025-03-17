@@ -1,0 +1,77 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKERHUB_CREDS= credentials('dockerhubcreds')
+        IMAGE_NAME = 'gald10102/flask-aws-monitor'
+    }
+    
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repo.git'
+            }
+        }
+        
+        stage('Parallel Checks') {
+            parallel {
+                stage('Linting') {
+                    steps {
+                        script {
+                            // Linting for Python (Flake8)
+                            sh 'flake8 . || true'  
+                            
+                            // Linting for Shell (ShellCheck)
+                            sh 'shellcheck *.sh || true'
+                            
+                            // Linting for Dockerfile (Hadolint)
+                            sh 'hadolint Dockerfile || true'
+                        }
+                    }
+                }
+                
+                stage('Security Scan') {
+                    steps {
+                        script {
+                            // Security scan for Docker (Trivy)
+                            sh 'trivy image --exit-code 1 --no-progress $IMAGE_NAME'
+                            
+                            // Security scan for Python (Bandit)
+                            sh 'bandit -r . || true'
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image
+                    sh 'docker build -t $IMAGE_NAME .'
+                }
+            }
+        }
+        
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    // Log in to Docker Hub
+                    sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_CREDS --password-stdin'
+                    
+                    // Push the Docker image to Docker Hub
+                    sh 'docker push $IMAGE_NAME'
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed! Check logs for details.'
+        }
+    }
+}

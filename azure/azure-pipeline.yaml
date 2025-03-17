@@ -70,6 +70,7 @@ stages:
     displayName: 'Build Docker Image'
     steps:
       - script: |
+          ls -l
           echo "Building Docker Image..."
           docker build -t $(IMAGE_NAME):latest .
         displayName: 'Build Docker Image'

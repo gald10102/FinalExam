@@ -45,7 +45,7 @@ stages:
     steps:
       - script: |
           echo "Building Docker image from Dockerfile..."
-          
+          ls -l
           # Build Docker image
           docker build -t $(IMAGE_NAME) .
         displayName: 'Build Docker Image'

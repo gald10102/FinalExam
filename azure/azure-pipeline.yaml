@@ -1,5 +1,5 @@
 trigger:
-- feature/jenkins
+- feature/azure  # Set to the branch you want to trigger the pipeline
 
 variables:
   DOCKER_REGISTRY: 'gald10102'
@@ -12,10 +12,7 @@ stages:
   jobs:
   - job: Clone
     steps:
-    - task: GitHubCheckout@1
-      inputs:
-        repository: 'https://github.com/gald10102/FinalExam.git'
-        ref: 'refs/heads/feature/pythonapp'
+    - checkout: self  # Use the built-in 'Checkout' task to clone the repository
 
 - stage: LintAndSecurityScan
   jobs:

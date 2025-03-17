@@ -65,7 +65,7 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                script {
+               script {
             // Extract Docker Hub username and password from Jenkins credentials
             def dockerHubUsername = DOCKERHUB_CREDS.username
             def dockerHubPassword = DOCKERHUB_CREDS.password
@@ -77,14 +77,17 @@ pipeline {
             sh """
                 echo $dockerHubPassword | docker login -u $dockerHubUsername --password-stdin
             """
-
-            // Check if login succeeded
+            
+            // Check Docker info to confirm login
             sh 'docker info'
+
+            // List Docker images to verify image is available locally
+            sh 'docker images'
 
             // Push the Docker image to Docker Hub
             sh """
-                docker push $DOCKER_REGISTRY/$REPO_NAME:$IMAGE_TAG
-                docker push $DOCKER_REGISTRY/$REPO_NAME:latest
+                docker push $IMAGE_NAME:$IMAGE_TAG
+                docker push $IMAGE_NAME:latest
             """
         }
             }

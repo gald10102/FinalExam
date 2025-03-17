@@ -71,7 +71,7 @@ stages:
     steps:
       - script: |
           echo "Building the Dockerfile"
-          displayName: 'Build Docker Image'
+        displayName: 'Build Docker Image'
 
 # 5. Push Docker Image to Docker Hub
 - stage: PushToDockerHub

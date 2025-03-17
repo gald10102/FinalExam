@@ -1,13 +1,16 @@
 import os
 import boto3
 from flask import Flask, render_template_string
+from dotenv import load_dotenv
 
+load_dotenv()
 app = Flask(__name__)
 
-# Fetch AWS credentials from environment variables 
+
+# Fetch AWS credentials from environment variables
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-REGION = "us-east-1"
+REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 
 # initialize Boto3 clients
 session = boto3.Session(

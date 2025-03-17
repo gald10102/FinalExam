@@ -1,0 +1,80 @@
+trigger:
+- feature/jenkins
+
+variables:
+  DOCKER_REGISTRY: 'gald10102'
+  REPO_NAME: 'flask-aws-monitor'
+  IMAGE_TAG: $(Build.BuildNumber)
+  DOCKER_IMAGE: '$(DOCKER_REGISTRY)/$(REPO_NAME):$(IMAGE_TAG)'
+
+stages:
+- stage: CloneRepository
+  jobs:
+  - job: Clone
+    steps:
+    - task: GitHubCheckout@1
+      inputs:
+        repository: 'https://github.com/gald10102/FinalExam.git'
+        ref: 'refs/heads/feature/pythonapp'
+
+- stage: LintAndSecurityScan
+  jobs:
+  - job: LintAndScan
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.x'
+        addToPath: true
+    - script: |
+        pip install flake8
+        cd pythonapp
+        flake8 . || true
+      displayName: 'Flake8 Linting'
+    - script: |
+        pip install bandit
+        cd pythonapp
+        bandit -r . || true
+      displayName: 'Bandit Security Scan'
+    - script: |
+        hadolint Dockerfile || true
+      displayName: 'Dockerfile Linting (Hadolint)'
+    - script: |
+        trivy image --exit-code 1 --no-progress $(DOCKER_IMAGE) || true
+      displayName: 'Trivy Security Scan'
+
+- stage: BuildDockerImage
+  jobs:
+  - job: Build
+    steps:
+    - script: |
+        cd pythonapp
+        docker build -t $(DOCKER_IMAGE) .
+        docker tag $(DOCKER_IMAGE) $(DOCKER_REGISTRY)/$(REPO_NAME):latest
+      displayName: 'Build Docker Image'
+
+- stage: PushToDockerHub
+  jobs:
+  - job: Push
+    steps:
+    - task: Docker@2
+      inputs:
+        containerRegistry: 'dockerhubcreds'  # The Azure DevOps Docker registry connection
+        repository: '$(DOCKER_IMAGE)'
+        command: 'push'
+        tags: |
+          $(IMAGE_TAG)
+          latest
+      displayName: 'Push to Docker Hub'
+
+- stage: PostActions
+  jobs:
+  - job: PostActions
+    steps:
+    - script: |
+        echo "Pipeline completed successfully!"
+      condition: succeeded()
+      displayName: 'Success Message'
+    - script: |
+        echo "Pipeline failed! Check logs for details."
+      condition: failed()
+      displayName: 'Failure Message'

@@ -3,7 +3,7 @@
 trigger:
   branches:
     include:
-      - main
+      - feature/pythonapp
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -11,7 +11,7 @@ pool:
 variables:
   DOCKERHUB_USERNAME: $(DOCKERHUB_USERNAME)
   DOCKERHUB_PASSWORD: $(DOCKERHUB_PASSWORD)
-  IMAGE_NAME: 'your-dockerhub-username/flask-aws-monitor'
+  IMAGE_NAME: 'gald10102/flask-aws-monitor'
 
 stages:
 - stage: CloneRepository
@@ -28,12 +28,13 @@ stages:
   - job: Linting
     displayName: 'Linting'
     steps:
-      - script: echo 'TODO: Add linting steps for Python, Shell, and Dockerfile'
+      - script: echo "linting"
         displayName: 'Run Linting'
-  
 
+  - job: SecurityScanning
     displayName: 'Security Scanning'
-      - script: echo 'TODO: Add security scanning steps for dependencies and container security'
+    steps:
+      - script: echo echo "security scan"
         displayName: 'Run Security Scan'
 
 - stage: BuildDockerImage
@@ -42,7 +43,7 @@ stages:
   jobs:
   - job: BuildImage
     steps:
-      - script: echo 'TODO: Add Docker build step'
+      - script: echo "build docker"
         displayName: 'Build Docker Image'
 
 - stage: PushToDockerHub
@@ -50,6 +51,13 @@ stages:
   dependsOn: BuildDockerImage
   jobs:
   - job: PushImage
+    steps:
+      - script: |
+          docker login -u $(DOCKERHUB_USERNAME) -p $(DOCKERHUB_PASSWORD)
+          docker build -t $(IMAGE_NAME) .
+          docker push $(IMAGE_NAME)
+        displayName: 'Push Docker Image to Docker Hub'
+
 - stage: SecureCredentials
   displayName: 'Store and Use Secure Credentials'
   dependsOn: []

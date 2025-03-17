@@ -1,6 +1,7 @@
 Terraform Feature!
 
 working apply:
+
 ![image](https://github.com/user-attachments/assets/6380a979-a941-4be6-972a-1238d20266ad)
 proof of ec2 instance:
 ![image](https://github.com/user-attachments/assets/59896086-1693-40aa-a1ea-026e9bfc3d48)

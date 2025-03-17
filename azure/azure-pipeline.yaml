@@ -1,20 +1,18 @@
-# Azure DevOps Pipeline for CI/CD Integration
-
 trigger:
   branches:
     include:
-      - feature/pythonapp
+      - main
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-- group: Gal-secrets 
-  DOCKERHUB_USERNAME: $(DOCKERHUB_USERNAME)
-  DOCKERHUB_PASSWORD: $(DOCKERHUB_PASSWORD)
-  IMAGE_NAME: 'gald10102/flask-aws-monitor'
+- group: Gal-secrets  # Ensure the variable group is linked to the pipeline
+- name: IMAGE_NAME
+  value: 'your-dockerhub-username/flask-aws-monitor'  # Change this to your Docker Hub repo
 
 stages:
+# 1. Clone Repository
 - stage: CloneRepository
   displayName: 'Clone Repository'
   jobs:
@@ -22,6 +20,7 @@ stages:
     steps:
     - checkout: self
 
+# 2. Parallel Linting & Security Checks
 - stage: ParallelChecks
   displayName: 'Parallel Linting & Security Checks'
   dependsOn: CloneRepository
@@ -29,40 +28,20 @@ stages:
   - job: Linting
     displayName: 'Linting'
     steps:
-      - script: echo "linting"
+      - script: |
+          echo 'Running linting for Python, Shell, and Dockerfile'
+          # Add actual linting commands here
         displayName: 'Run Linting'
 
   - job: SecurityScanning
     displayName: 'Security Scanning'
     steps:
-      - script: echo echo "security scan"
+      - script: |
+          echo 'Running security scan for dependencies and container security'
+          # Add actual security scan commands here
         displayName: 'Run Security Scan'
 
-- stage: BuildDockerImage
-  displayName: 'Build Docker Image'
-  dependsOn: ParallelChecks
-  jobs:
-  - job: BuildImage
-    steps:
-      - script: |
-          echo "Building Docker image from Dockerfile..."
-          ls -l
-          # Build Docker image
-          docker build -t $(IMAGE_NAME) .
-        displayName: 'Build Docker Image'
-
-- stage: PushToDockerHub
-  displayName: 'Push Docker Image to Docker Hub'
-  dependsOn: BuildDockerImage
-  jobs:
-  - job: PushImage
-    steps:
-      - script: |
-          docker login -u $(DOCKERHUB_USERNAME) -p $(DOCKERHUB_PASSWORD)
-          docker build -t $(IMAGE_NAME) .
-          docker push $(IMAGE_NAME)
-        displayName: 'Push Docker Image to Docker Hub'
-
+# 3. Secure Credentials (Ensure Docker Hub Login Works)
 - stage: SecureCredentials
   displayName: 'Store and Use Secure Credentials'
   dependsOn: []
@@ -71,8 +50,40 @@ stages:
     displayName: 'Ensure Credentials are Secure'
     steps:
       - script: |
-          echo "Using Docker Hub credentials securely."
-          
-          # Docker login using secrets from the Gal-secrets variable group
+          echo "Checking if secrets are accessible..."
+          echo "Docker Hub username: $(DOCKERHUB_USERNAME)"  # Username should be printed
+          echo "Logging into Docker Hub securely..."
+
+          # Perform secure Docker login
           echo $(DOCKERHUB_PASSWORD) | docker login -u $(DOCKERHUB_USERNAME) --password-stdin
-        displayName: 'Secure Credential Storage'
+        env:
+          DOCKERHUB_USERNAME: $(DOCKERHUB_USERNAME)
+          DOCKERHUB_PASSWORD: $(DOCKERHUB_PASSWORD)
+        displayName: 'Docker Hub Login'
+
+# 4. Build Docker Image
+- stage: BuildDockerImage
+  displayName: 'Build Docker Image'
+  dependsOn: ParallelChecks
+  jobs:
+  - job: BuildImage
+    displayName: 'Build Docker Image'
+    steps:
+      - script: |
+          echo "Building Docker Image..."
+          docker build -t $(IMAGE_NAME):latest .
+        displayName: 'Build Docker Image'
+
+# 5. Push Docker Image to Docker Hub
+- stage: PushToDockerHub
+  displayName: 'Push Docker Image to Docker Hub'
+  dependsOn: BuildDockerImage
+  jobs:
+  - job: PushImage
+    displayName: 'Push Docker Image'
+    steps:
+      - script: |
+          echo "Tagging and pushing Docker image..."
+          docker tag $(IMAGE_NAME):latest $(IMAGE_NAME):latest
+          docker push $(IMAGE_NAME):latest
+        displayName: 'Push Image to Docker Hub'

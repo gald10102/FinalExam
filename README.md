@@ -10,4 +10,5 @@ proof of built image:
 
 accessing the app via https://<public-ip>:5001
 
-![image](https://github.com/user-attachments/assets/91e2e600-69dd-4f81-9cc1-5b09e1f9db3b)
+![image](https://github.com/user-attachments/assets/fd5099cb-8fff-4d5c-a9c0-6394bfa7edb9)
+

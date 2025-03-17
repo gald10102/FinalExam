@@ -4,12 +4,12 @@ from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
-# Fetch AWS credentials from environment variables
+# Fetch AWS credentials from environment variables 
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 REGION = "us-east-1"
 
-# Initialize Boto3 clients
+# initialize Boto3 clients
 session = boto3.Session(
    aws_access_key_id=AWS_ACCESS_KEY,
    aws_secret_access_key=AWS_SECRET_KEY,
@@ -31,16 +31,19 @@ def home():
                "Type": instance["InstanceType"],
                "Public IP": instance.get("PublicIpAddress", "N/A")
            })
-  
+
    # Fetch VPCs
+   vpcs = ec2_client.describe_vpcs()
    vpc_data = [{"VPC ID": vpc["VpcId"], "CIDR": vpc["CidrBlock"]} for vpc in vpcs["Vpcs"]]
-  
+
    # Fetch Load Balancers
+   lbs = elb_client.describe_load_balancers()
    lb_data = [{"LB Name": lb["LoadBalancerName"], "DNS Name": lb["DNSName"]} for lb in lbs["LoadBalancers"]]
-  
+
    # Fetch AMIs (only owned by the account)
+   amis = ec2_client.describe_images(Owners=["self"])
    ami_data = [{"AMI ID": ami["ImageId"], "Name": ami.get("Name", "N/A")} for ami in amis["Images"]]
-  
+
    # Render the result in a simple table
    html_template = """
    <html>
@@ -80,7 +83,7 @@ def home():
    </body>
    </html>
    """
-  
+
    return render_template_string(html_template, instance_data=instance_data, vpc_data=vpc_data, lb_data=lb_data, ami_data=ami_data)
 
 if __name__ == "__main__":

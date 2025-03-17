@@ -1,3 +1,2 @@
-os
 flask
 boto3
